@@ -1,11 +1,12 @@
 from busio import UART
+import time
 from .keycode import Keycode as KC
 
-HEADER = [0x57, 0xAB]
+HEADER = bytearray([0x57, 0xAB])
 CMD_KEY = 0x02
-CMD_MEDIA_KEY = 0x02
-CMD_MOUSE_ABSOLUTE = 0x03
-CMD_MOUSE_RELATIVE = 0x04
+CMD_MEDIA_KEY = 0x03
+CMD_MOUSE_ABSOLUTE = 0x04
+CMD_MOUSE_RELATIVE = 0x05
 
 MODIFIER_KEY_CODE = set(
     [
@@ -36,6 +37,8 @@ class CH9329:
         self._pressed_keys: set[int] = set()
         self._pressed_modifier_keys: set[int] = set()
         self._pressed_mouse_key_bit: int = 0
+
+        self.debug = False
 
     def _parse_modifier_keys(self, keys: set[int]) -> int:
         b: int = 0
@@ -79,21 +82,29 @@ class CH9329:
 
         self._send_key()
 
+    def keyboard_tap(self, *key_codes: int):
+        self.keyboard_press(*key_codes)
+        time.sleep(0.01)
+        self.keyboard_release_all()
+
     def _send_key(self):
         b = bytearray(5 + 8 + 1)
-        b[0:1] = HEADER
+        b[0:2] = HEADER
         b[2] = self._address
         b[3] = CMD_KEY
         b[4] = 8
+        b[5] = self._parse_modifier_keys(self._pressed_modifier_keys)
+        b[6] = 0
         n = 0
         for code in self._pressed_keys:
-            b[5 + n] = code
+            b[7 + n] = code
             n += 1
 
-        b[5 + n] = 0
-        b[5 + n + 1] = self._parse_modifier_keys(self._pressed_modifier_keys)
 
         self._add_checksum(b)
+
+        if self.debug:
+            print("ch9329 send:", " ".join(map(hex, b)))
         self._uart.write(b)
 
 
@@ -119,18 +130,22 @@ class CH9329:
 
 
     def _send_mouse(self, x: int, y: int, wheel: int):
-        b = bytearray(5 + 7 + 1)
-        b[0:1] = HEADER
+        b = bytearray(5 + 5 + 1)
+        b[0:2] = HEADER
         b[2] = self._address
         b[3] = CMD_MOUSE_RELATIVE
         b[4] = 5
-        b[5] = 0x02
+        b[5] = 0x01
         b[6] = self._pressed_mouse_key_bit
         b[7] = x & 0xFF
         b[8] = y & 0xFF
         b[9] = wheel & 0xFF
 
         self._add_checksum(b)
+
+        if self.debug:
+            print("ch9329 send:", " ".join(map(hex, b)))
+        self._uart.write(b)
 
     @classmethod
     def _add_checksum(cls, b: bytearray):
