@@ -26,10 +26,15 @@ class InvalidKeyCodeError(Exception):
     pass
 
 
-class CH9329:
+class MOUSE_BUTTON_KEYCODE:
     LEFT_BUTTON = 1
     RIGHT_BUTTON = 2
     MIDDLE_BUTTON = 4
+
+
+class CH9329:
+    KEYBOARD_KEYCODE = KC
+    MOUSE_KEYCODE = MOUSE_BUTTON_KEYCODE
 
     def __init__(self, uart: UART, address: int = 0x00):
         self._uart = uart
@@ -100,13 +105,11 @@ class CH9329:
             b[7 + n] = code
             n += 1
 
-
         self._add_checksum(b)
 
         if self.debug:
             print("ch9329 send:", " ".join(map(hex, b)))
         self._uart.write(b)
-
 
     def mouse_move(self, x: int, y: int, wheel: int):
         if x < -128 or 127 < x:
@@ -128,6 +131,14 @@ class CH9329:
         self._pressed_mouse_key_bit &= ~sum(key_codes) & 0xFF
         self._send_mouse(0, 0, 0)
 
+    def mouse_release_all(self):
+        self._pressed_mouse_key_bit = 0x00
+        self._send_mouse(0, 0, 0)
+
+    def mouse_tap(self, *key_codes: int):
+        self.mouse_press(*key_codes)
+        time.sleep(0.01)
+        self.mouse_release_all()
 
     def _send_mouse(self, x: int, y: int, wheel: int):
         b = bytearray(5 + 5 + 1)
