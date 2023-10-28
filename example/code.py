@@ -25,4 +25,21 @@ while True:
     print("mouse up")
     hid.mouse_move(0, -10, 0)
 
-    time.sleep(10)
+    time.sleep(5)
+
+    print("hold abc")
+    hid.keyboard_press(KC.A)
+    time.sleep(1)
+    hid.keyboard_press(KC.B)
+    time.sleep(1)
+    hid.keyboard_press(KC.C)
+    time.sleep(1)
+    hid.keyboard_release(KC.A)
+    time.sleep(1)
+    hid.keyboard_release(KC.B)
+    time.sleep(1)
+    hid.keyboard_release(KC.C)
+    time.sleep(1)
+    hid.keyboard_release_all()
+
+    time.sleep(5)
