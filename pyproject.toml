@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "circuitpython-ch9329"
+version = "0.1.0"
+description = ""
+authors = ["Atsushi Morimoto (74th) <74th.tech@gmail.com>"]
+readme = "README.md"
+packages = [{include = "circuitpython_ch9239"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[tool.poetry.group.dev.dependencies]
+adafruit-circuitpython-typing = "^1.9.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
