@@ -1,2 +1,2 @@
-from .ch9239 import CH9329, InvalidKeyCodeError
+from .ch9329 import CH9329, InvalidKeyCodeError
 from .keycode import Keycode
